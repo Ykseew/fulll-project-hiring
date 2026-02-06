@@ -79,9 +79,8 @@ Given('I have registered this vehicle into my fleet', async function (this: Worl
 
 Given("this vehicle has been registered into the other user's fleet", async function (this: World) {
   this.otherFleet.registerVehicle(this.vehiclePlateNumber);
-  try {
-    await this.vehicleRepository.findByPlateNumber(this.vehiclePlateNumber);
-  } catch {
+  const existing = await this.vehicleRepository.findByPlateNumberOrNull(this.vehiclePlateNumber);
+  if (!existing) {
     await this.vehicleRepository.save(new Vehicle(this.vehiclePlateNumber));
   }
   await this.fleetRepository.save(this.otherFleet);

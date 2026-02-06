@@ -22,13 +22,21 @@ export class PostgresVehicleRepository extends VehicleRepository {
   }
 
   async findByPlateNumber(plateNumber: string): Promise<Vehicle> {
+    const vehicle = await this.findByPlateNumberOrNull(plateNumber);
+    if (!vehicle) {
+      throw new Error(`Vehicle not found: ${plateNumber}`);
+    }
+    return vehicle;
+  }
+
+  async findByPlateNumberOrNull(plateNumber: string): Promise<Vehicle | null> {
     const result = await this.pool.query(
       'SELECT plate_number, lat, lng, alt FROM vehicles WHERE plate_number = $1',
       [plateNumber],
     );
 
     if (result.rows.length === 0) {
-      throw new Error(`Vehicle not found: ${plateNumber}`);
+      return null;
     }
 
     const row = result.rows[0];

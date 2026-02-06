@@ -15,4 +15,8 @@ export class InMemoryVehicleRepository extends VehicleRepository {
     }
     return vehicle;
   }
+
+  async findByPlateNumberOrNull(plateNumber: string): Promise<Vehicle | null> {
+    return this.vehicles.get(plateNumber) ?? null;
+  }
 }

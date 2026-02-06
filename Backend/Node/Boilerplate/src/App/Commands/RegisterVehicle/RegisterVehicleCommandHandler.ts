@@ -13,9 +13,10 @@ export class RegisterVehicleCommandHandler {
     const fleet = await this.fleetRepository.findById(command.fleetId);
     fleet.registerVehicle(command.vehiclePlateNumber);
 
-    try {
-      await this.vehicleRepository.findByPlateNumber(command.vehiclePlateNumber);
-    } catch {
+    const existing = await this.vehicleRepository.findByPlateNumberOrNull(
+      command.vehiclePlateNumber,
+    );
+    if (!existing) {
       await this.vehicleRepository.save(new Vehicle(command.vehiclePlateNumber));
     }
 
