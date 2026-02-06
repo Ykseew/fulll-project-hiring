@@ -41,7 +41,10 @@ Before(async function (this: World) {
     this.fleetRepository = new InMemoryFleetRepository();
     this.vehicleRepository = new InMemoryVehicleRepository();
   }
-  this.registerHandler = new RegisterVehicleCommandHandler(this.fleetRepository, this.vehicleRepository);
+  this.registerHandler = new RegisterVehicleCommandHandler(
+    this.fleetRepository,
+    this.vehicleRepository,
+  );
   this.parkHandler = new ParkVehicleCommandHandler(this.vehicleRepository);
 });
 
@@ -66,11 +69,15 @@ Given('the fleet of another user', async function (this: World) {
 });
 
 Given('I have registered this vehicle into my fleet', async function (this: World) {
-  await this.registerHandler.handle(new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber));
+  await this.registerHandler.handle(
+    new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber),
+  );
 });
 
-Given('this vehicle has been registered into the other user\'s fleet', async function (this: World) {
-  await this.registerHandler.handle(new RegisterVehicleCommand(this.otherFleet.id, this.vehiclePlateNumber));
+Given("this vehicle has been registered into the other user's fleet", async function (this: World) {
+  await this.registerHandler.handle(
+    new RegisterVehicleCommand(this.otherFleet.id, this.vehiclePlateNumber),
+  );
 });
 
 Given('a location', function (this: World) {
@@ -78,46 +85,56 @@ Given('a location', function (this: World) {
 });
 
 Given('my vehicle has been parked into this location', async function (this: World) {
-  await this.parkHandler.handle(new ParkVehicleCommand(
-    this.myFleet.id,
-    this.vehiclePlateNumber,
-    this.location.lat,
-    this.location.lng,
-    this.location.alt,
-  ));
+  await this.parkHandler.handle(
+    new ParkVehicleCommand(
+      this.myFleet.id,
+      this.vehiclePlateNumber,
+      this.location.lat,
+      this.location.lng,
+      this.location.alt,
+    ),
+  );
 });
 
 When('I register this vehicle into my fleet', async function (this: World) {
-  await this.registerHandler.handle(new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber));
+  await this.registerHandler.handle(
+    new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber),
+  );
 });
 
 When('I try to register this vehicle into my fleet', async function (this: World) {
   try {
-    await this.registerHandler.handle(new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber));
+    await this.registerHandler.handle(
+      new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber),
+    );
   } catch (e) {
     this.error = e as Error;
   }
 });
 
 When('I park my vehicle at this location', async function (this: World) {
-  await this.parkHandler.handle(new ParkVehicleCommand(
-    this.myFleet.id,
-    this.vehiclePlateNumber,
-    this.location.lat,
-    this.location.lng,
-    this.location.alt,
-  ));
-});
-
-When('I try to park my vehicle at this location', async function (this: World) {
-  try {
-    await this.parkHandler.handle(new ParkVehicleCommand(
+  await this.parkHandler.handle(
+    new ParkVehicleCommand(
       this.myFleet.id,
       this.vehiclePlateNumber,
       this.location.lat,
       this.location.lng,
       this.location.alt,
-    ));
+    ),
+  );
+});
+
+When('I try to park my vehicle at this location', async function (this: World) {
+  try {
+    await this.parkHandler.handle(
+      new ParkVehicleCommand(
+        this.myFleet.id,
+        this.vehiclePlateNumber,
+        this.location.lat,
+        this.location.lng,
+        this.location.alt,
+      ),
+    );
   } catch (e) {
     this.error = e as Error;
   }
@@ -128,10 +145,13 @@ Then('this vehicle should be part of my vehicle fleet', async function (this: Wo
   assert.strictEqual(fleet.hasVehicle(this.vehiclePlateNumber), true);
 });
 
-Then('I should be informed this this vehicle has already been registered into my fleet', function (this: World) {
-  assert.ok(this.error);
-  assert.ok(this.error.message.includes('already been registered'));
-});
+Then(
+  'I should be informed this this vehicle has already been registered into my fleet',
+  function (this: World) {
+    assert.ok(this.error);
+    assert.ok(this.error.message.includes('already been registered'));
+  },
+);
 
 Then('the known location of my vehicle should verify this location', async function (this: World) {
   const vehicle = await this.vehicleRepository.findByPlateNumber(this.vehiclePlateNumber);
@@ -140,7 +160,10 @@ Then('the known location of my vehicle should verify this location', async funct
   assert.ok(vehicleLocation.equals(this.location));
 });
 
-Then('I should be informed that my vehicle is already parked at this location', function (this: World) {
-  assert.ok(this.error);
-  assert.ok(this.error.message.includes('already parked'));
-});
+Then(
+  'I should be informed that my vehicle is already parked at this location',
+  function (this: World) {
+    assert.ok(this.error);
+    assert.ok(this.error.message.includes('already parked'));
+  },
+);

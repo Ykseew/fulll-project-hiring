@@ -3,9 +3,7 @@ import { Location } from '../../../Domain/Location';
 import { ParkVehicleCommand } from './ParkVehicleCommand';
 
 export class ParkVehicleCommandHandler {
-  constructor(
-    private readonly vehicleRepository: VehicleRepository,
-  ) {}
+  constructor(private readonly vehicleRepository: VehicleRepository) {}
 
   async handle(command: ParkVehicleCommand): Promise<void> {
     const vehicle = await this.vehicleRepository.findByPlateNumber(command.vehiclePlateNumber);

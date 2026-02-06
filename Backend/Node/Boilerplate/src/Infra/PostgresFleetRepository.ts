@@ -18,10 +18,7 @@ export class PostgresFleetRepository extends FleetRepository {
         [fleet.id, fleet.userId],
       );
 
-      await client.query(
-        'DELETE FROM fleet_vehicles WHERE fleet_id = $1',
-        [fleet.id],
-      );
+      await client.query('DELETE FROM fleet_vehicles WHERE fleet_id = $1', [fleet.id]);
 
       const vehicles = fleet.getVehicles();
       for (const plateNumber of vehicles) {
@@ -41,10 +38,7 @@ export class PostgresFleetRepository extends FleetRepository {
   }
 
   async findById(id: string): Promise<Fleet> {
-    const fleetResult = await this.pool.query(
-      'SELECT id, user_id FROM fleets WHERE id = $1',
-      [id],
-    );
+    const fleetResult = await this.pool.query('SELECT id, user_id FROM fleets WHERE id = $1', [id]);
 
     if (fleetResult.rows.length === 0) {
       throw new Error(`Fleet not found: ${id}`);
@@ -57,7 +51,9 @@ export class PostgresFleetRepository extends FleetRepository {
       [id],
     );
 
-    const vehicles = vehiclesResult.rows.map((r: { vehicle_plate_number: string }) => r.vehicle_plate_number);
+    const vehicles = vehiclesResult.rows.map(
+      (r: { vehicle_plate_number: string }) => r.vehicle_plate_number,
+    );
 
     return Fleet.reconstitute(row.id, row.user_id, vehicles);
   }

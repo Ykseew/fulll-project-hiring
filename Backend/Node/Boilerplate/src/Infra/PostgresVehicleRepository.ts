@@ -32,9 +32,10 @@ export class PostgresVehicleRepository extends VehicleRepository {
     }
 
     const row = result.rows[0];
-    const location = row.lat !== null && row.lng !== null
-      ? new Location(row.lat, row.lng, row.alt ?? undefined)
-      : undefined;
+    const location =
+      row.lat !== null && row.lng !== null
+        ? new Location(row.lat, row.lng, row.alt ?? undefined)
+        : undefined;
 
     return Vehicle.reconstitute(row.plate_number, location);
   }

@@ -48,19 +48,23 @@ program
   .argument('<lat>', 'Latitude')
   .argument('<lng>', 'Longitude')
   .argument('[alt]', 'Altitude')
-  .action(async (fleetId: string, vehiclePlateNumber: string, lat: string, lng: string, alt?: string) => {
-    await initDb();
-    const pool = getPool();
-    const vehicleRepo = new PostgresVehicleRepository(pool);
-    const handler = new ParkVehicleCommandHandler(vehicleRepo);
-    await handler.handle(new ParkVehicleCommand(
-      fleetId,
-      vehiclePlateNumber,
-      parseFloat(lat),
-      parseFloat(lng),
-      alt ? parseFloat(alt) : undefined,
-    ));
-    await closePool();
-  });
+  .action(
+    async (fleetId: string, vehiclePlateNumber: string, lat: string, lng: string, alt?: string) => {
+      await initDb();
+      const pool = getPool();
+      const vehicleRepo = new PostgresVehicleRepository(pool);
+      const handler = new ParkVehicleCommandHandler(vehicleRepo);
+      await handler.handle(
+        new ParkVehicleCommand(
+          fleetId,
+          vehiclePlateNumber,
+          parseFloat(lat),
+          parseFloat(lng),
+          alt ? parseFloat(alt) : undefined,
+        ),
+      );
+      await closePool();
+    },
+  );
 
 program.parseAsync(process.argv);
