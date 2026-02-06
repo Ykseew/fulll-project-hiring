@@ -4,11 +4,11 @@ import { FleetRepository } from '../Domain/FleetRepository';
 export class InMemoryFleetRepository extends FleetRepository {
   private fleets: Map<string, Fleet> = new Map();
 
-  save(fleet: Fleet): void {
+  async save(fleet: Fleet): Promise<void> {
     this.fleets.set(fleet.id, fleet);
   }
 
-  findById(id: string): Fleet {
+  async findById(id: string): Promise<Fleet> {
     const fleet = this.fleets.get(id);
     if (!fleet) {
       throw new Error(`Fleet not found: ${id}`);

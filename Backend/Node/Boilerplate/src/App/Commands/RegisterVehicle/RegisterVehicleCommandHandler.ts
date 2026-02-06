@@ -9,16 +9,16 @@ export class RegisterVehicleCommandHandler {
     private readonly vehicleRepository: VehicleRepository,
   ) {}
 
-  handle(command: RegisterVehicleCommand): void {
-    const fleet = this.fleetRepository.findById(command.fleetId);
+  async handle(command: RegisterVehicleCommand): Promise<void> {
+    const fleet = await this.fleetRepository.findById(command.fleetId);
     fleet.registerVehicle(command.vehiclePlateNumber);
 
     try {
-      this.vehicleRepository.findByPlateNumber(command.vehiclePlateNumber);
+      await this.vehicleRepository.findByPlateNumber(command.vehiclePlateNumber);
     } catch {
-      this.vehicleRepository.save(new Vehicle(command.vehiclePlateNumber));
+      await this.vehicleRepository.save(new Vehicle(command.vehiclePlateNumber));
     }
 
-    this.fleetRepository.save(fleet);
+    await this.fleetRepository.save(fleet);
   }
 }

@@ -7,10 +7,10 @@ export class ParkVehicleCommandHandler {
     private readonly vehicleRepository: VehicleRepository,
   ) {}
 
-  handle(command: ParkVehicleCommand): void {
-    const vehicle = this.vehicleRepository.findByPlateNumber(command.vehiclePlateNumber);
+  async handle(command: ParkVehicleCommand): Promise<void> {
+    const vehicle = await this.vehicleRepository.findByPlateNumber(command.vehiclePlateNumber);
     const location = new Location(command.lat, command.lng, command.alt);
     vehicle.parkAt(location);
-    this.vehicleRepository.save(vehicle);
+    await this.vehicleRepository.save(vehicle);
   }
 }
