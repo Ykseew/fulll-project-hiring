@@ -16,7 +16,7 @@ export class PostgresVehicleRepository extends VehicleRepository {
 
     await this.pool.query(
       `INSERT INTO vehicles (plate_number, lat, lng, alt) VALUES ($1, $2, $3, $4)
-       ON CONFLICT (plate_number) DO UPDATE SET lat = $2, lng = $3, alt = $4`,
+       ON CONFLICT (plate_number) DO UPDATE SET lat = EXCLUDED.lat, lng = EXCLUDED.lng, alt = EXCLUDED.alt`,
       [vehicle.plateNumber, lat, lng, alt],
     );
   }

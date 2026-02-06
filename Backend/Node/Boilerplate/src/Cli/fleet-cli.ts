@@ -10,6 +10,16 @@ import { RegisterVehicleCommandHandler } from '../App/Commands/RegisterVehicle/R
 import { ParkVehicleCommand } from '../App/Commands/ParkVehicle/ParkVehicleCommand';
 import { ParkVehicleCommandHandler } from '../App/Commands/ParkVehicle/ParkVehicleCommandHandler';
 
+async function withDb<T>(fn: (pool: ReturnType<typeof getPool>) => Promise<T>): Promise<T> {
+  await initDb();
+  const pool = getPool();
+  try {
+    return await fn(pool);
+  } finally {
+    await closePool();
+  }
+}
+
 const program = new Command();
 
 program.name('fleet').description('Fleet management CLI');
@@ -18,13 +28,11 @@ program
   .command('create')
   .argument('<userId>', 'User ID')
   .action(async (userId: string) => {
-    await initDb();
-    const pool = getPool();
-    const fleetRepo = new PostgresFleetRepository(pool);
-    const handler = new CreateFleetCommandHandler(fleetRepo);
-    const fleetId = await handler.handle(new CreateFleetCommand(userId));
-    console.log(fleetId);
-    await closePool();
+    await withDb(async (pool) => {
+      const handler = new CreateFleetCommandHandler(new PostgresFleetRepository(pool));
+      const fleetId = await handler.handle(new CreateFleetCommand(userId));
+      console.log(fleetId);
+    });
   });
 
 program
@@ -32,13 +40,13 @@ program
   .argument('<fleetId>', 'Fleet ID')
   .argument('<vehiclePlateNumber>', 'Vehicle plate number')
   .action(async (fleetId: string, vehiclePlateNumber: string) => {
-    await initDb();
-    const pool = getPool();
-    const fleetRepo = new PostgresFleetRepository(pool);
-    const vehicleRepo = new PostgresVehicleRepository(pool);
-    const handler = new RegisterVehicleCommandHandler(fleetRepo, vehicleRepo);
-    await handler.handle(new RegisterVehicleCommand(fleetId, vehiclePlateNumber));
-    await closePool();
+    await withDb(async (pool) => {
+      const handler = new RegisterVehicleCommandHandler(
+        new PostgresFleetRepository(pool),
+        new PostgresVehicleRepository(pool),
+      );
+      await handler.handle(new RegisterVehicleCommand(fleetId, vehiclePlateNumber));
+    });
   });
 
 program
@@ -50,21 +58,22 @@ program
   .argument('[alt]', 'Altitude')
   .action(
     async (fleetId: string, vehiclePlateNumber: string, lat: string, lng: string, alt?: string) => {
-      await initDb();
-      const pool = getPool();
-      const vehicleRepo = new PostgresVehicleRepository(pool);
-      const handler = new ParkVehicleCommandHandler(vehicleRepo);
-      await handler.handle(
-        new ParkVehicleCommand(
-          fleetId,
-          vehiclePlateNumber,
-          parseFloat(lat),
-          parseFloat(lng),
-          alt ? parseFloat(alt) : undefined,
-        ),
-      );
-      await closePool();
+      await withDb(async (pool) => {
+        const handler = new ParkVehicleCommandHandler(new PostgresVehicleRepository(pool));
+        await handler.handle(
+          new ParkVehicleCommand(
+            fleetId,
+            vehiclePlateNumber,
+            parseFloat(lat),
+            parseFloat(lng),
+            alt ? parseFloat(alt) : undefined,
+          ),
+        );
+      });
     },
   );
 
-program.parseAsync(process.argv);
+program.parseAsync(process.argv).catch((err: Error) => {
+  console.error(`Error: ${err.message}`);
+  process.exit(1);
+});

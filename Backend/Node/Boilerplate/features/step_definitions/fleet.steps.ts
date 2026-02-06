@@ -1,6 +1,7 @@
 import { Given, When, Then, Before, After } from '@cucumber/cucumber';
 import assert from 'assert';
 import { Fleet } from '../../src/Domain/Fleet';
+import { Vehicle } from '../../src/Domain/Vehicle';
 import { FleetRepository } from '../../src/Domain/FleetRepository';
 import { VehicleRepository } from '../../src/Domain/VehicleRepository';
 import { Location } from '../../src/Domain/Location';
@@ -54,6 +55,8 @@ After(async function (this: World) {
   }
 });
 
+// --- Given: set up fixtures directly (no handlers) ---
+
 Given('my fleet', async function (this: World) {
   this.myFleet = new Fleet('fleet-1', 'user-1');
   await this.fleetRepository.save(this.myFleet);
@@ -69,15 +72,19 @@ Given('the fleet of another user', async function (this: World) {
 });
 
 Given('I have registered this vehicle into my fleet', async function (this: World) {
-  await this.registerHandler.handle(
-    new RegisterVehicleCommand(this.myFleet.id, this.vehiclePlateNumber),
-  );
+  this.myFleet.registerVehicle(this.vehiclePlateNumber);
+  await this.vehicleRepository.save(new Vehicle(this.vehiclePlateNumber));
+  await this.fleetRepository.save(this.myFleet);
 });
 
 Given("this vehicle has been registered into the other user's fleet", async function (this: World) {
-  await this.registerHandler.handle(
-    new RegisterVehicleCommand(this.otherFleet.id, this.vehiclePlateNumber),
-  );
+  this.otherFleet.registerVehicle(this.vehiclePlateNumber);
+  try {
+    await this.vehicleRepository.findByPlateNumber(this.vehiclePlateNumber);
+  } catch {
+    await this.vehicleRepository.save(new Vehicle(this.vehiclePlateNumber));
+  }
+  await this.fleetRepository.save(this.otherFleet);
 });
 
 Given('a location', function (this: World) {
@@ -85,16 +92,12 @@ Given('a location', function (this: World) {
 });
 
 Given('my vehicle has been parked into this location', async function (this: World) {
-  await this.parkHandler.handle(
-    new ParkVehicleCommand(
-      this.myFleet.id,
-      this.vehiclePlateNumber,
-      this.location.lat,
-      this.location.lng,
-      this.location.alt,
-    ),
-  );
+  const vehicle = await this.vehicleRepository.findByPlateNumber(this.vehiclePlateNumber);
+  vehicle.parkAt(this.location);
+  await this.vehicleRepository.save(vehicle);
 });
+
+// --- When: execute actions through handlers (application layer) ---
 
 When('I register this vehicle into my fleet', async function (this: World) {
   await this.registerHandler.handle(
@@ -139,6 +142,8 @@ When('I try to park my vehicle at this location', async function (this: World) {
     this.error = e as Error;
   }
 });
+
+// --- Then: assertions ---
 
 Then('this vehicle should be part of my vehicle fleet', async function (this: World) {
   const fleet = await this.fleetRepository.findById(this.myFleet.id);

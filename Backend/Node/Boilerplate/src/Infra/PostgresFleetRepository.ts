@@ -14,7 +14,7 @@ export class PostgresFleetRepository extends FleetRepository {
 
       await client.query(
         `INSERT INTO fleets (id, user_id) VALUES ($1, $2)
-         ON CONFLICT (id) DO UPDATE SET user_id = $2`,
+         ON CONFLICT (id) DO UPDATE SET user_id = EXCLUDED.user_id`,
         [fleet.id, fleet.userId],
       );
 
